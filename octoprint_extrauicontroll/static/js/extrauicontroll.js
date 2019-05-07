@@ -1,9 +1,9 @@
 /*
- * Author: ntoff
+ * Author: adr76
  * License: AGPLv3
  */
 $(function() {
-    function ExtraDistanceViewModel(parameters) {
+    function ExtraUIControllViewModel(parameters) {
         var self = this;
         
         self.control = parameters[0];
@@ -31,7 +31,7 @@ $(function() {
     }
 
     OCTOPRINT_VIEWMODELS.push({
-        construct: ExtraDistanceViewModel,
+        construct: ExtraUIControllViewModel,
         dependencies: [ "controlViewModel"]
     });
 });

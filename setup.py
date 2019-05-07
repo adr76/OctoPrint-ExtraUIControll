@@ -1,21 +1,21 @@
 # coding=utf-8
 
 
-plugin_identifier = "extradistance"
+plugin_identifier = "extrauicontroll"
 
-plugin_package = "octoprint_extradistance"
+plugin_package = "octoprint_extrauicontroll"
 
-plugin_name = "OctoPrint-ExtraDistance"
+plugin_name = "OctoPrint-ExtraUIControll"
 
 plugin_version = "0.1.0"
 
-plugin_description = """Adds extra movement distance buttons."""
+plugin_description = """Adds more Web UI conrolls buttons"""
 
-plugin_author = "ntoff"
+plugin_author = "adr76"
 
 plugin_author_email = ""
 
-plugin_url = "https://github.com/ntoff/OctoPrint-ExtraDistance"
+plugin_url = "https://github.com/adr76/OctoPrint-ExtraUIControll"
 
 
 plugin_license = "AGPLv3"

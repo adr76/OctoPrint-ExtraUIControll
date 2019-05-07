@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 import octoprint.plugin
 
-class ExtraDistancePlugin(octoprint.plugin.SettingsPlugin,
+class ExtraUIControllPlugin(octoprint.plugin.SettingsPlugin,
                     octoprint.plugin.AssetPlugin,
                     octoprint.plugin.TemplatePlugin):
 
@@ -20,9 +20,9 @@ class ExtraDistancePlugin(octoprint.plugin.SettingsPlugin,
 		# Define your plugin's asset files to automatically include in the
 		# core UI here.
 		return dict(
-			js=["js/extradistance.js"],
-			css=["css/extradistance.css"],
-			less=["less/extradistance.less"]
+			js=["js/extrauicontroll.js"],
+			css=["css/extrauicontroll.css"],
+			less=["less/extrauicontroll.less"]
 		)
 
 	##~~ Softwareupdate hook
@@ -33,17 +33,17 @@ class ExtraDistancePlugin(octoprint.plugin.SettingsPlugin,
 		# for details.
 		return dict(
 			unknown=dict(
-				displayName="Extra Distance Buttons",
+				displayName="Extra UI Buttons",
 				displayVersion=self._plugin_version,
 
 				# version check: github repository
 				type="github_release",
-				user="ntoff",
-				repo="OctoPrint-ExtraDistance",
+				user="adr76",
+				repo="OctoPrint-ExtraUIControll",
 				current=self._plugin_version,
 
 				# update method: pip
-				pip="https://github.com/ntoff/OctoPrint-ExtraDistance/archive/{target_version}.zip"
+				pip="https://github.com/adr76/OctoPrint-ExtraUIControll/archive/{target_version}.zip"
 			)
 		)
 
@@ -55,7 +55,7 @@ __plugin_name__ = "Extra Distance Buttons"
 
 def __plugin_load__():
 	global __plugin_implementation__
-	__plugin_implementation__ = ExtraDistancePlugin()
+	__plugin_implementation__ = ExtraUIControllPlugin()
 
 	global __plugin_hooks__
 	__plugin_hooks__ = {
