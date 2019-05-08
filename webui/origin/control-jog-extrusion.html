@@ -1,0 +1,25 @@
+<!-- Extrusion control panel -->
+<div id="control-jog-extrusion" class="jog-panel" style="" data-bind="visible: loginState.isUser">
+    <h1>Tool (E)</h1>
+    <div>
+        <div class="btn-group control-box">
+            <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; !isPaused() &amp;&amp; loginState.isUser()">
+                Select Tool...
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" data-bind="foreach: tools">
+                <li><a href="#" data-bind="click: $root.sendSelectToolCommand, text: name(), enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; !$root.isPaused() &amp;&amp; $root.loginState.isUser()">Hotend</a></li>
+            </ul>
+        </div>
+        <div class="input-append control-box">
+            <input type="text" class="input-mini text-right" data-bind="value: extrusionAmount, enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), attr: {placeholder: settings.printer_defaultExtrusionLength}" placeholder="5">
+            <span class="add-on">mm</span>
+        </div>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendExtrudeCommand() }">Extrude</button>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendRetractCommand() }">Retract</button>
+
+        <!-- Flow rate -->
+        <div class="slider slider-horizontal" style="width: 114px;"><div class="slider-track"><div class="slider-selection" style="left: 0%; width: 64%;"></div><div class="slider-handle round" style="left: 64%;"></div><div class="slider-handle round hide" style="left: 0%;"></div></div><div class="tooltip top hide" style="top: -14px; left: 50.2829px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">107</div></div><input style="width: 100px; display: none;" type="number" data-bind="slider: {min: 75, max: 125, step: 1, value: flowRate, tooltip: 'hide'}"></div>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; loginState.isUser(), click: function() { $root.sendFlowRateCommand() }">Flow rate:<span data-bind="text: flowRate() + '%'">107%</span></button>
+    </div>
+</div>

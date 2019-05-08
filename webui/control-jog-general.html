@@ -1,0 +1,49 @@
+<!-- General control panel -->
+<div id="control-jog-general" class="jog-panel" style="" data-bind="visible: loginState.isUser">
+  <h1>General</h1>
+  <div>
+    <div class="slider slider-horizontal" style="width: 109px;">
+      <div class="slider-track">
+        <div class="slider-selection" style="left: 0%; width: 30%;"></div>
+        <div class="slider-handle round" style="left: 30%;"></div>
+        <div class="slider-handle round hide" style="left: 0%;"></div>
+      </div>
+      <div class="tooltip top hide" style="top: -14px; left: 0px;">
+        <div class="tooltip-arrow"></div>
+        <div class="tooltip-inner">20</div>
+      </div>
+      <input type="number" style="width: 95px; display: none;"
+      data-bind="slider: {min: 00, max: 100, step: 1, value: lightLevel, tooltip: &#39;hide&#39;}" />
+    </div>
+    <button class="btn btn-block control-box" id="ligth-on" data-bind="enable: isOperational() &amp;&amp; loginState.isUser() &amp;&amp; !islocked(), click: function() { $root.sendFanSpeed() }">Light: <span data-bind="text: lightLevel() + &#39;%&#39;">20%</span>
+    </button>
+    
+    <div class="slider slider-horizontal" style="width: 109px;">
+      <div class="slider-track">
+        <div class="slider-selection" style="left: 0%; width: 30%;"></div>
+        <div class="slider-handle round" style="left: 30%;"></div>
+        <div class="slider-handle round hide" style="left: 0%;"></div>
+      </div>
+      <div class="tooltip top hide" style="top: -14px; left: 0px;">
+        <div class="tooltip-arrow"></div>
+        <div class="tooltip-inner">30</div>
+      </div>
+      <input type="number" style="width: 95px; display: none;"
+      data-bind="slider: {min: 00, max: 100, step: 1, value: fanSpeed, tooltip: &#39;hide&#39;}" />
+    </div>
+    <button class="btn btn-block control-box" id="fan-on" data-bind="enable: isOperational() &amp;&amp; loginState.isUser() &amp;&amp; !islocked(), click: function() { $root.sendFanSpeed() }">Fan speed: <span data-bind="text: fanSpeed() + &#39;%&#39;">30%</span>
+    </button>
+    <div class="btn-group">
+    <button class="btn" id="fan-off"
+    data-bind="enable: isOperational() &amp;&amp; loginState.isUser() &amp;&amp; !islocked(), click: function() { $root.sendCustomCommand({ type: &#39;command&#39;, commands: [&#39;M106 S0&#39;] }) }">
+    Fan off</button> 
+    <button class="btn" id="fan-lock"
+    data-bind="enable: isOperational() &amp;&amp; loginState.isUser(), click: function() { $root.lockFanInput() }, attr: { title: lockTitle }"
+    title="Lock or unlock the cooling fan controls. When locked, no cooling fan commands will be sent to the printer. Fan controls are unlocked">
+    </button>
+    </div>
+    <button class="btn btn-block control-box"
+    data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendCustomCommand({type:&#39;command&#39;,command:&#39;M18&#39;}) }"
+    id="motors-off">Motors off</button>
+  </div>
+</div>

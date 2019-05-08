@@ -1,0 +1,9 @@
+<!-- General control panel -->
+<div id="control-jog-general" class="jog-panel" style="" data-bind="visible: loginState.isUser">
+    <h1>General</h1>
+    <div>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendCustomCommand({type:'command',command:'M18'}) }">Motors off</button>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; loginState.isUser(), click: function() { $root.sendCustomCommand({type:'command',command:'M106 S255'}) }">Fan on</button>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; loginState.isUser(), click: function() { $root.sendCustomCommand({type:'command',command:'M106 S0'}) }">Fan off</button>
+    </div>
+</div>

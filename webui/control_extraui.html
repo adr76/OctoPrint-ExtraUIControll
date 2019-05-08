@@ -1,0 +1,739 @@
+<div id="control" class="tab-pane active">
+                                            
+    <div id="webcam_container" tabindex="0" data-bind="event: { keydown: onKeyDown, mouseover: onMouseOver, mouseout: onMouseOut, focus: onFocus }">
+        <div class="nowebcam" data-bind="visible: !webcamLoaded()">
+            <div class="text webcam_loading" data-bind="visible: !webcamLoaded() &amp;&amp; !webcamError()" style="display: none;">
+                <p><strong>Webcam stream loading...</strong></p>
+            </div>
+            <div class="text webcam_error" data-bind="visible: !webcamLoaded() &amp;&amp; webcamError()" style="">
+                <p><strong>Webcam stream not loaded</strong></p>
+                <p data-bind="visible: !loginState.isAdmin()" style="display: none;"><small>It might not be configured correctly or require authentication. To have this fixed, get in touch with an administrator of this OctoPrint instance.</small></p>
+                <p data-bind="visible: loginState.isAdmin" style=""><small>It might not be configured correctly or require authentication. You can change the URL of the stream under "Settings" &gt; "Webcam &amp; Timelapse" &gt; "Stream URL". If you don't have a webcam just set the URL to an empty value.</small></p>
+                <p data-bind="visible: loginState.isUser" style=""><small>Currently configured stream URL: <a target="_blank" rel="noreferrer" data-bind="attr: {href: settings.webcam_streamUrl}, text: settings.webcam_streamUrl" href="http://adr-home.dyndns.org:1890/?action=stream">http://adr-home.dyndns.org:1890/?action=stream</a></small></p>
+            </div>
+        </div>
+        <div id="webcam_rotator" data-bind="css: { webcam_rotated: settings.webcam_rotate90(), webcam_unrotated: !settings.webcam_rotate90() }" class="webcam_unrotated">
+            <div class="webcam_fixed_ratio ratio169" data-bind="css: webcamRatioClass">
+                <div class="webcam_fixed_ratio_inner">
+                    <img id="webcam_image" data-bind="css: { flipH: settings.webcam_flipH(), flipV: settings.webcam_flipV() }, event: { load: onWebcamLoaded, error: onWebcamErrored }, visible: !webcamError()" src="http://adr-home.dyndns.org:1890/?action=stream&amp;1557292046829" style="display: none;">
+                </div>
+            </div><div id="fullscreen-bar">
+
+	<!-- ko allowBindings: false -->
+		<div id="fullscreen-info">
+			<div class="temp">
+				<!-- ko foreach: tempModel.tools -->
+				<p data-bind="template: { name: 'tempFullscreenTemplate' }">
+    <span data-bind="html: $parent.formatBarTemperatureFullscreen(name(), actual(), target())">Tool: 21.3°C</span>
+</p>
+				<!-- /ko -->
+				<p data-bind="template: { name: 'tempFullscreenTemplate', data: tempModel.bedTemp }, visible: tempModel.hasBed">
+    <span data-bind="html: $parent.formatBarTemperatureFullscreen(name(), actual(), target())">Bed: 21.3°C</span>
+</p>
+			</div>
+		</div>
+	<!-- /ko -->
+	
+	<!-- ko allowBindings: false -->
+		<div id="fullscreen-cancel">
+			<div class="estimated">
+				<p>Print Time: <strong data-bind="text: printTimeString">-</strong></p>
+				<p>Print Time Left: <strong data-bind="text: printTimeLeftString">-</strong></p>
+			</div>
+			<div class="progress" id="fullscreen_progressBar">
+				<div class="bar" data-bind="style: { width: progressString() + '%' }" style="width: 0%;"></div>
+			</div>
+			
+			<button class="btn" id="fullscreen-toggle" data-bind="click: fullscreen"><i class="icon-resize-full" aria-hidden="true" data-bind="css: { 'icon-resize-small': isFullscreen(), 'icon-resize-full': !isFullscreen() }"></i></button>
+			<div class="user-buttons" data-bind="visible: loginState.isUser" style="">
+			<button class="btn span4" id="job_pause" data-bind="click: function() { isPaused() ? onlyResume() : onlyPause(); }, enable: enablePause, css: {active: isPaused()}, attr: {title: titlePauseButton}" disabled="" title="Pauses the print job"><i class="fa fa-pause" data-bind="css: {'fa-pause': !isPaused(), 'fa-play': isPaused()}"></i> <span data-bind="visible: !isPaused()">Pause</span><span data-bind="visible: isPaused()" style="display: none;">Resume</span></button></div>
+		</div>
+	<!-- /ko -->
+
+</div>
+        </div>
+        <div class="keycontrol_overlay" data-bind="visible: showKeycontrols" style="display: none;">
+            <div class="keycontrol_overlay_heading">Keyboard controls active <a href="#" data-bind="click: toggleKeycontrolHelp"><i class="fa fa-chevron-down" data-bind="css: { 'fa-chevron-down': !keycontrolHelpActive(), 'fa-chevron-up': keycontrolHelpActive() }"></i></a></div>
+            <div data-bind="visible: keycontrolHelpActive" style="display: none;">
+                <div class="keycontrol_overlay_column">
+                    <kbd>→</kbd> / <kbd>←</kbd>: X Axis +/-<br>
+                    <kbd>↑</kbd> / <kbd>↓</kbd>: Y Axis +/-<br>
+                    <kbd>W</kbd>, <kbd>Page↑</kbd> / <kbd>S</kbd>, <kbd>Page↓</kbd>: Z Axis +/-
+                </div>
+                <div class="keycontrol_overlay_column">
+                    <kbd>Home</kbd>: Home X/Y<br>
+                    <kbd>End</kbd>: Home Z<br>
+                    <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, <kbd>4</kbd>: Stepsize 0.1, 1, 10, 100mm
+                </div>
+            </div>
+        </div>
+    </div>
+    <div data-bind="visible: keycontrolPossible" style="">
+        <small class="muted">Hint: If you move your mouse over the picture, you enter keyboard control mode.</small>
+    </div>
+
+
+<div class="jog-panel" style="" data-bind="visible: loginState.isUser">
+    <!-- XY jogging control panel -->
+    <div id="control-jog-xy" class="jog-panel">
+        <h1>X/Y</h1>
+        <div>
+            <button id="control-yinc" class="btn box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendJogCommand('y',1) }"><i class="fa fa-arrow-up"></i></button>
+        </div>
+        <div>
+            <button id="control-xdec" class="btn box pull-left" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendJogCommand('x',-1) }"><i class="fa fa-arrow-left"></i></button>
+            <button id="control-xyhome" class="btn box pull-left" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendHomeCommand(['x', 'y']) }"><i class="fa fa-home"></i></button>
+            <button id="control-xinc" class="btn box pull-left" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendJogCommand('x',1) }"><i class="fa fa-arrow-right"></i></button>
+        </div>
+        <div>
+            <button id="control-ydec" class="btn box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendJogCommand('y',-1) }"><i class="fa fa-arrow-down"></i></button>
+        </div>
+    </div>
+    <!-- Z jogging control panel -->
+    <div id="control-jog-z" class="jog-panel">
+        <h1>Z</h1>
+        <div>
+            <button id="control-zinc" class="btn box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendJogCommand('z',1) }"><i class="fa fa-arrow-up"></i></button>
+        </div>
+        <div>
+            <button id="control-zhome" class="btn box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendHomeCommand(['z']) }"><i class="fa fa-home"></i></button>
+        </div>
+        <div>
+            <button id="control-zdec" class="btn box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendJogCommand('z',-1) }"><i class="fa fa-arrow-down"></i></button>
+        </div>
+    </div>                        <div class="distance" id="distance-selector">                            <div class="btn-group" data-toggle="buttons-radio" id="jog_distance1">                                <!-- ko foreach: distances1 -->                                    <button type="button" class="btn distance" data-bind="enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }" id="control-distance001">0.01</button>                                                                    <button type="button" class="btn distance" data-bind="enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }" id="control-distance01">0.1</button>                                                                    <button type="button" class="btn distance" data-bind="enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }" id="control-distance1">1</button>                                                                    <button type="button" class="btn distance active" data-bind="enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }" id="control-distance10">10</button>                                <!-- /ko -->                            </div>                            <div class="btn-group" data-toggle="buttons-radio" id="jog_distance2">                            <!-- ko foreach: distances2 -->                                <button type="button" class="btn distance" data-bind="enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }" id="control-distance5">5</button>                                                            <button type="button" class="btn distance" data-bind="enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }" id="control-distance50">50</button>                                                            <button type="button" class="btn distance" data-bind="enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }" id="control-distance100">100</button>                                                            <button type="button" class="btn distance" data-bind="enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }" id="control-distance150">150</button>                            <!-- /ko -->                        </div>                        </div>                    
+
+    <!-- Jog distance -->
+    
+
+    <!-- Feed rate -->
+    <div id="control-jog-feedrate" class="jog-panel">
+        <div class="slider slider-horizontal" style="width: 167px;"><div class="slider-track"><div class="slider-selection" style="left: 0%; width: 50%;"></div><div class="slider-handle round" style="left: 50%;"></div><div class="slider-handle round hide" style="left: 0%;"></div></div><div class="tooltip top hide" style="top: -14px; left: 0px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">100</div></div><input type="number" style="width: 153px; display: none;" data-bind="slider: {min: 50, max: 150, step: 1, value: feedRate, tooltip: 'hide'}"></div>
+        <button class="btn btn-block" style="width: 169px" data-bind="enable: isOperational() &amp;&amp; loginState.isUser(), click: function() { $root.sendFeedRateCommand() }">Feed rate:<span data-bind="text: feedRate() + '%'">100%</span></button>
+    </div>
+</div>
+<!-- Extrusion control panel -->
+<div id="control-jog-extrusion" class="jog-panel" style="" data-bind="visible: loginState.isUser">
+    <h1>Tool (E)</h1>
+    <div>
+        <div class="btn-group control-box">
+            <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; !isPaused() &amp;&amp; loginState.isUser()">
+                Select Tool...
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" data-bind="foreach: tools">
+                <li><a href="#" data-bind="click: $root.sendSelectToolCommand, text: name(), enable: $root.isOperational() &amp;&amp; !$root.isPrinting() &amp;&amp; !$root.isPaused() &amp;&amp; $root.loginState.isUser()">Hotend</a></li>
+            </ul>
+        </div>
+        <div class="input-append control-box">
+            <input type="text" class="input-mini text-right" data-bind="value: extrusionAmount, enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), attr: {placeholder: settings.printer_defaultExtrusionLength}" placeholder="5">
+            <span class="add-on">mm</span>
+        </div>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendExtrudeCommand() }">Extrude</button>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendRetractCommand() }">Retract</button>
+
+        <!-- Flow rate -->
+        <div class="slider slider-horizontal" style="width: 114px;"><div class="slider-track"><div class="slider-selection" style="left: 0%; width: 50%;"></div><div class="slider-handle round" style="left: 50%;"></div><div class="slider-handle round hide" style="left: 0%;"></div></div><div class="tooltip top hide" style="top: -14px; left: 0px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">100</div></div><input style="width: 100px; display: none;" type="number" data-bind="slider: {min: 75, max: 125, step: 1, value: flowRate, tooltip: 'hide'}"></div>
+        <button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; loginState.isUser(), click: function() { $root.sendFlowRateCommand() }">Flow rate:<span data-bind="text: flowRate() + '%'">100%</span></button>
+    </div>
+</div>
+<!-- General control panel -->
+<div id="control-jog-general" class="jog-panel" style="" data-bind="visible: loginState.isUser">
+    <h1>General</h1>
+    <div>
+                					<div class="slider slider-horizontal" style="width: 109px;"><div class="slider-track"><div class="slider-selection" style="left: 0%; width: 30%;"></div><div class="slider-handle round" style="left: 30%;"></div><div class="slider-handle round hide" style="left: 0%;"></div></div><div class="tooltip top hide" style="top: -14px; left: 0px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">30</div></div><input type="number" style="width: 95px; display: none;" data-bind="slider: {min: 00, max: 100, step: 1, value: fanSpeed, tooltip: 'hide'}"></div>        					<button class="btn btn-block control-box" id="fan-on" data-bind="enable: isOperational() &amp;&amp; loginState.isUser() &amp;&amp; !islocked(), click: function() { $root.sendFanSpeed() }">Fan speed:<span data-bind="text: fanSpeed() + '%'">30%</span></button>        					<div class="btn-group">        						<button class="btn " id="fan-off" data-bind="enable: isOperational() &amp;&amp; loginState.isUser() &amp;&amp; !islocked(), click: function() { $root.sendCustomCommand({ type: 'command', commands: ['M106 S0'] }) }">Fan off</button>        						<button class="btn " id="fan-lock" data-bind="enable: isOperational() &amp;&amp; loginState.isUser(), click: function() { $root.lockFanInput() }, attr: { title: lockTitle } " title="Lock or unlock the cooling fan controls. When locked, no cooling fan commands will be sent to the printer. 
+
+ Fan controls are unlocked">        							<i class="fa fa-unlock" data-bind="css: {'fa-lock': islocked(), 'fa-unlock': !islocked()}"></i>        						</button>        					</div>        				<button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendCustomCommand({type:'command',command:'M18'}) }" id="motors-off">Motors off</button>
+        
+        
+    </div>
+</div>
+<!-- Extra UI control panel -->
+<div id="control-jog-general" class="jog-panel" style="" data-bind="visible: loginState.isUser">
+    <h1>Extra</h1>
+    <div>
+                					<div class="slider slider-horizontal" style="width: 109px;"><div class="slider-track"><div class="slider-selection" style="left: 0%; width: 30%;"></div><div class="slider-handle round" style="left: 30%;"></div><div class="slider-handle round hide" style="left: 0%;"></div></div><div class="tooltip top hide" style="top: -14px; left: 0px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">30</div></div><input type="number" style="width: 95px; display: none;" data-bind="slider: {min: 00, max: 100, step: 1, value: fanSpeed, tooltip: 'hide'}"></div>        					<button class="btn btn-block control-box" id="fan-on" data-bind="enable: isOperational() &amp;&amp; loginState.isUser() &amp;&amp; !islocked(), click: function() { $root.sendFanSpeed() }">Fan speed:<span data-bind="text: fanSpeed() + '%'">30%</span></button>        					<div class="btn-group">        						<button class="btn " id="fan-off" data-bind="enable: isOperational() &amp;&amp; loginState.isUser() &amp;&amp; !islocked(), click: function() { $root.sendCustomCommand({ type: 'command', commands: ['M106 S0'] }) }">Fan off</button>        						<button class="btn " id="fan-lock" data-bind="enable: isOperational() &amp;&amp; loginState.isUser(), click: function() { $root.lockFanInput() }, attr: { title: lockTitle } " title="Lock or unlock the cooling fan controls. When locked, no cooling fan commands will be sent to the printer. 
+
+ Fan controls are unlocked">        							<i class="fa fa-unlock" data-bind="css: {'fa-lock': islocked(), 'fa-unlock': !islocked()}"></i>        						</button>        					</div>        				<button class="btn btn-block control-box" data-bind="enable: isOperational() &amp;&amp; !isPrinting() &amp;&amp; loginState.isUser(), click: function() { $root.sendCustomCommand({type:'command',command:'M18'}) }" id="motors-off">Motors off</button>
+        
+        
+    </div>
+</div>
+<!-- Container for custom controls -->
+<div id="control-jog-custom" style="clear: both;" data-bind="visible: loginState.isUser, template: { name: $root.displayMode, foreach: controls }">
+    <div class="custom_section">
+        <h1 data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', parent: '.custom_section', container: '> div' }"><i class="fa fa-caret-right" data-bind="css: {'fa-caret-down': !collapsed, 'fa-caret-right': collapsed}"></i> <span data-bind="text: name">dd</span></h1>
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' -->
+    <div class="custom_section_vertical" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}" style="display: none;">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } -->
+    <!-- ko foreach: input -->
+        <label style="cursor: default" data-bind="text: name">GCODE</label>
+        <!-- ko if: slider --><!-- /ko -->
+        <!-- ko ifnot: slider -->
+            <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: value" placeholder="GCODE">
+        <!-- /ko -->
+    <!-- /ko -->
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">SEND</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } -->
+    <label style="cursor: default" data-bind="text: output">------------------------------------------------------------------------</label>
+<!-- /ko -->
+    </form>
+
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } -->
+    <!-- ko foreach: input -->
+        <label style="cursor: default" data-bind="text: name">Ligth</label>
+        <!-- ko if: slider -->
+            <div class="slider slider-horizontal" style="width: 114px;"><div class="slider-track"><div class="slider-selection" style="left: 0%; width: 19.6078%;"></div><div class="slider-handle round" style="left: 19.6078%;"></div><div class="slider-handle round hide" style="left: 0%;"></div></div><div class="tooltip top" style="top: -14px; left: 0px;"><div class="tooltip-arrow"></div><div class="tooltip-inner">50</div></div><input type="number" style="width: 100px; display: none;" data-bind="slider: {value: value, min: slider.min, max: slider.max, step: slider.step}"></div>
+        <!-- /ko -->
+        <!-- ko ifnot: slider --><!-- /ko -->
+    <!-- /ko -->
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Set</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Off</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">F-Change</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">F-Load</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Clean</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } -->
+    <!-- ko foreach: input -->
+        <label style="cursor: default" data-bind="text: name">Step</label>
+        <!-- ko if: slider --><!-- /ko -->
+        <!-- ko ifnot: slider -->
+            <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: value" placeholder="Step">
+        <!-- /ko -->
+    <!-- /ko -->
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">BabyStep</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Position</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } -->
+    <label style="cursor: default" data-bind="text: output">X=140.00, Y=90.00, Z=190.400, E=0.0000</label>
+<!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Zmax</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } -->
+    <label style="cursor: default" data-bind="text: output">------</label>
+<!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } -->
+    <!-- ko foreach: input -->
+        <label style="cursor: default" data-bind="text: name"></label>
+        <!-- ko if: slider --><!-- /ko -->
+        <!-- ko ifnot: slider -->
+            <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: value" placeholder="">
+        <!-- /ko -->
+    <!-- /ko -->
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Set</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } -->
+    <!-- ko foreach: input -->
+        <label style="cursor: default" data-bind="text: name">Tool </label>
+        <!-- ko if: slider --><!-- /ko -->
+        <!-- ko ifnot: slider -->
+            <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: value" placeholder="Tool ">
+        <!-- /ko -->
+    
+        <label style="cursor: default" data-bind="text: name">Bed</label>
+        <!-- ko if: slider --><!-- /ko -->
+        <!-- ko ifnot: slider -->
+            <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: value" placeholder="Bed">
+        <!-- /ko -->
+    <!-- /ko -->
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Set Temp</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } -->
+    <label style="cursor: default" data-bind="text: output">T:0.0 B:0.0</label>
+<!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">OFF</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+
+    <div class="custom_section">
+        <h1 data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', parent: '.custom_section', container: '> div' }"><i class="fa fa-caret-down" data-bind="css: {'fa-caret-down': !collapsed, 'fa-caret-right': collapsed}"></i> <span data-bind="text: name">Bed Level</span></h1>
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' -->
+    <div class="custom_section_vertical" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Make Point Z-Probe (G30)</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } -->
+    <label style="cursor: default" data-bind="text: output">   Result:0 X:0  Y:0</label>
+<!-- /ko -->
+    </form>
+
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Saved Z-probe Height</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } -->
+    <label style="cursor: default" data-bind="text: output">0.00</label>
+<!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } -->
+    <!-- ko foreach: input -->
+        <label style="cursor: default" data-bind="text: name"></label>
+        <!-- ko if: slider --><!-- /ko -->
+        <!-- ko ifnot: slider -->
+            <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: value" placeholder="">
+        <!-- /ko -->
+    <!-- /ko -->
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Set new</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' -->
+    <div class="row-fluid custom_section_horizontal_grid" data-bind="css: {hide: collapsed &amp;&amp; name}">
+        <!-- ko foreach: children -->
+        <div data-bind="template: { name: $root.displayMode }, css: $root.rowCss($data)" class="span7">
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' -->
+    <div class="custom_section_vertical" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">X030 Y150</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">---- Z0 ----</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">X250 Y150</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">----- Z1 ----</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">X140 Y90</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">---- Z10 ----</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }"> X030 Y030</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">--  Z180 ---</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">X250 Y030</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+</div>
+        
+        <div data-bind="template: { name: $root.displayMode }, css: $root.rowCss($data)" class="span5">
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' -->
+    <div class="custom_section_vertical" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Autolevel 3-point G29</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Autolevel</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">Autolevel Matrix G32</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } -->
+    <label style="cursor: default" data-bind="text: output"></label>
+<!-- /ko -->
+    </form>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+</div>
+        <!-- /ko -->
+    </div>
+    <!-- /ko -->
+<!-- /ko -->
+    </div>
+
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">BL:Down</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">BL:Up</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">BL:Reset</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">BL:Test</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">BL:Test Mode</button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } -->
+    <!-- ko if: layout == 'vertical' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed &amp;&amp; name}">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } -->
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }">4 Points    </button>
+<!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+</div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' --><!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' --><!-- /ko -->
+<!-- /ko -->
+    </div>
+</div>
+
+<!-- Templates for custom controls -->
+<script type="text/html" id="customControls_containerTemplate_nameless">
+    <div class="custom_section">
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } --><!-- /ko -->
+    </div>
+</script>
+<script type="text/html" id="customControls_containerTemplate_collapsable">
+    <div class="custom_section">
+        <h1 data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', parent: '.custom_section', container: '> div' }"><i class="fa" data-bind="css: {'fa-caret-down': !collapsed, 'fa-caret-right': collapsed}"></i> <span data-bind="text: name"></span></h1>
+        <!-- ko template: { name: 'customControls_containerTemplate', data: $data } --><!-- /ko -->
+    </div>
+</script>
+<script type="text/html" id="customControls_containerTemplate">
+    <!-- ko if: layout == 'vertical' -->
+    <div class="custom_section_vertical" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed && name}"></div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal' -->
+    <div class="custom_section_horizontal" data-bind="template: { name: $root.displayMode, foreach: children }, css: {hide: collapsed && name}"></div>
+    <!-- /ko -->
+
+    <!-- ko if: layout == 'horizontal_grid' -->
+    <div class="row-fluid custom_section_horizontal_grid" data-bind="css: {hide: collapsed && name}">
+        <!-- ko foreach: children -->
+        <div data-bind="template: { name: $root.displayMode }, css: $root.rowCss($data)"></div>
+        <!-- /ko -->
+    </div>
+    <!-- /ko -->
+</script>
+<script type="text/html" id="customControls_controlTemplate">
+    <form class="form-inline custom_control">
+        <!-- ko template: { name: 'customControls_controlTemplate_input', data: $data, if: $data.hasOwnProperty('input') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_command', data: $data, if: $data.hasOwnProperty('command') || $data.hasOwnProperty('commands') || $data.hasOwnProperty('script') || $data.hasOwnProperty('javascript') } --><!-- /ko -->
+        <!-- ko template: { name: 'customControls_controlTemplate_output', data: $data, if: $data.hasOwnProperty('output') } --><!-- /ko -->
+    </form>
+</script>
+<script type="text/html" id="customControls_controlTemplate_input">
+    <!-- ko foreach: input -->
+        <label style="cursor: default" data-bind="text: name"></label>
+        <!-- ko if: slider -->
+            <input type="number" style="width: 100px" data-bind="slider: {value: value, min: slider.min, max: slider.max, step: slider.step}">
+        <!-- /ko -->
+        <!-- ko ifnot: slider -->
+            <input type="text" class="input-small" data-bind="attr: {placeholder: name}, value: value">
+        <!-- /ko -->
+    <!-- /ko -->
+</script>
+<script type="text/html" id="customControls_controlTemplate_output">
+    <label style="cursor: default" data-bind="text: output"></label>
+</script>
+<script type="text/html" id="customControls_controlTemplate_command">
+    <button class="btn" data-bind="text: name, css: additionalClasses, enable: $root.isCustomEnabled($data), click: function() { $root.clickCustom($data) }"></button>
+</script>
+<!-- End of templates for custom controls -->
+                                </div>
