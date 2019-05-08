@@ -8,24 +8,20 @@ $(function() {
         
         self.control = parameters[0];
 
-        self.control.distances1 = ko.observableArray([0.01, 0.1, 1, 10]);
-        self.control.distances2 = ko.observableArray([5, 50, 100, 150]);
-
         if ($("#touch body").length == 0) {
-            $(".jog-panel .distance").remove();
-            $("#control-jog-z").after("\
-                <div class=\"distance\" id=\"distance-selector\">\
-                    <div class=\"btn-group\" data-toggle=\"buttons-radio\" id=\"jog_distance1\">\
-                        <!-- ko foreach: distances1 -->\
-                            <button type=\"button\" class=\"btn distance\" data-bind=\"enable: $root.isOperational() && !$root.isPrinting() && $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }\"></button>\
-                        <!-- /ko -->\
-                    </div>\
-                    <div class=\"btn-group\" data-toggle=\"buttons-radio\" id=\"jog_distance2\">\
-                    <!-- ko foreach: distances2 -->\
-                        <button type=\"button\" class=\"btn distance\" data-bind=\"enable: $root.isOperational() && !$root.isPrinting() && $root.loginState.isUser(), text: $data, click: function() { $root.distance($data) }, css: { active: $root.distance() === $data }, attr: { id: 'control-distance' + $root.stripDistanceDecimal($data) }\"></button>\
-                    <!-- /ko -->\
-                </div>\
-                </div>\
+            //remove original fan on/off buttons
+            $("#fan-on").remove();
+            $("#fan-off").remove();
+            //add new fan controls
+            $("#control-jog-general").find("button").eq(0).before("\
+              <input type=\"number\" style=\"width: 95px\" data-bind=\"slider: {min: 00, max: 100, step: 1, value: fanSpeed, tooltip: 'hide'}\">\
+              <button class=\"btn btn-block control-box\" id=\"fan-on\" data-bind=\"enable: isOperational() && loginState.isUser() && !islocked(), click: function() { $root.sendFanSpeed() }\">" + gettext("Fan speed") + ":<span data-bind=\"text: fanSpeed() + '%'\"></span></button>\
+              <div class=\"btn-group\">\
+                <button class=\"btn \" id=\"fan-off\" data-bind=\"enable: isOperational() && loginState.isUser() && !islocked(), click: function() { $root.sendCustomCommand({ type: 'command', commands: ['M106 S0'] }) }\">" + gettext("Fan off") + "</button>\
+                <button class=\"btn \" id=\"fan-lock\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.lockFanInput() }, attr: { title: lockTitle } \">\
+                  <i class=\"fa fa-unlock\" data-bind=\"css: {'fa-lock': islocked(), 'fa-unlock': !islocked()}\"></i>\
+                </button>\
+              </div>\
             ");
         }
     }
