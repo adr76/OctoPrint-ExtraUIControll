@@ -7,7 +7,10 @@ $(function() {
         var self = this;
         
         self.control = parameters[0];
-
+        
+        $("#control-jog-general").find("button").eq(0).attr("id", "motors-off");
+        $("#control-jog-general").find("button").eq(1).attr("id", "fan-on");
+        $("#control-jog-general").find("button").eq(2).attr("id", "fan-off");
         if ($("#touch body").length == 0) {
             //remove original fan on/off buttons
             $("#fan-on").remove();
