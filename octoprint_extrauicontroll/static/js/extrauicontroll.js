@@ -9,7 +9,7 @@ $(function() {
         self.control = parameters[0];        
         
         
-        // Fan Speed controll
+        //---- Fan Speed controll
         self.control.fanSpeed = new ko.observable(60);      
 
         self.control.fanSpeedToPwm = ko.pureComputed(function () {
@@ -33,7 +33,7 @@ $(function() {
             $("#control-jog-general").find("button").eq(0).before("\
                 <input type=\"number\" style=\"width: 95px\" data-bind=\"slider: {min: 00, max: 100, step: 1, value: fanSpeed, tooltip: 'hide'}\">\
                 <div class=\"btn-group\">\
-                    <button class=\"btn btn-block control-box\" id=\"fan-on\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.sendFanSpeed() }\">" + gettext("Fan speed") + ":<span data-bind=\"text: fanSpeed() + '%'\"></span></button>\
+                    <button class=\"btn\" id=\"fan-on\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.sendFanSpeed() }\">" + gettext("Fan speed") + ":<span data-bind=\"text: fanSpeed() + '%'\"></span></button>\
                     <button class=\"btn \" id=\"fan-off\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.sendCustomCommand({ type: 'command', commands: ['M106 S0'] }) }\">" + gettext("off") + "</button>\
                 </div>\
            ");
