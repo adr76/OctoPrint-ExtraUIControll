@@ -6,8 +6,10 @@ $(function() {
     function ExtraUIControllViewModel(parameters) {
         var self = this;
         
-        self.control = parameters[0];        
- 
+        self.control = parameters[0];     
+ /*       
+        // #control-jog-general
+        // -------------------- 
         self.control.filamentChange = function () {
 			self.control.sendCustomCommand({ command: "\
             M104 S230 ; Set Extr Temp
@@ -40,8 +42,7 @@ $(function() {
             "});
 		};
         
-        // #control-jog-general
-        // --------------------
+
         $("#control-jog-extrusion").find("button").eq(0).attr("id", "tool");
         $("#control-jog-extrusion").find("button").eq(1).attr("id", "extrude");
         $("#control-jog-extrusion").find("button").eq(2).attr("id", "retract");
@@ -52,7 +53,7 @@ $(function() {
                 <button class=\"btn \" id=\"f-load\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.filamentLoad() }\">F-Load</button>\
             </div>
         ");
-        
+ */       
         // #control-jog-general
         // --------------------
         self.control.light = new ko.observable(30);   
