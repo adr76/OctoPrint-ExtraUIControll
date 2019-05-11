@@ -45,7 +45,7 @@ $(function() {
         $("#control-jog-extrusion").find("button").eq(0).attr("id", "tool");
         $("#control-jog-extrusion").find("button").eq(1).attr("id", "extrude");
         $("#control-jog-extrusion").find("button").eq(2).attr("id", "retract");
-        $("#control-jog-extrusion").find("button").eq(2).attr("id", "flow");
+        $("#control-jog-extrusion").find("button").eq(3).attr("id", "flow");
         $("#retract").before("\
             <div class=\"btn-group\">\
                 <button class=\"btn \" id=\"f-change\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.filamentChange() }\">F-Change</button>\
