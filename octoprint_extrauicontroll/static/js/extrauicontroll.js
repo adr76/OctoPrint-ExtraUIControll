@@ -7,39 +7,15 @@ $(function() {
         var self = this;
         
         self.control = parameters[0];     
- /*       
-        // #control-jog-general
+       
+        // #control-jog-extrusion
         // -------------------- 
         self.control.filamentChange = function () {
-			self.control.sendCustomCommand({ command: "\
-            M104 S230 ; Set Extr Temp
-            M109 S230 ; Waite Ext Temp
-            G91   ; Relative XYZ
-            G1 Z+10 E-3 F1500
-            G1 E-150 F3000
-            G1 E-150 F3000
-            G1 E-150 F3000
-            G1 E-150 F3000
-            G1 E-100 F3000
-            G1 E-100 F1200
-            G90\
-            "});
+			self.control.sendCustomCommand({ command: "M114"});
 		};
         
         self.control.filamentLoad = function () {
-			self.control.sendCustomCommand({ command: "\
-            M104 S230 ; Set Extr Temp
-            M109 S230 ; Waite Ext Temp
-            G91   ; Relative XYZ
-            G1 E150 F3000
-            G1 E150 F3000
-            G1 E150 F3000
-            G1 E150 F3000
-            G1 E100 F3000
-            G1 E50 F1500
-            G1 E-1 F1200
-            G90\
-            "});
+			self.control.sendCustomCommand({ command: "M114"});
 		};
         
 
@@ -47,13 +23,13 @@ $(function() {
         $("#control-jog-extrusion").find("button").eq(1).attr("id", "extrude");
         $("#control-jog-extrusion").find("button").eq(2).attr("id", "retract");
         $("#control-jog-extrusion").find("button").eq(3).attr("id", "flow");
-        $("#retract").before("\
+        $("#retract").after("\
             <div class=\"btn-group\">\
                 <button class=\"btn \" id=\"f-change\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.filamentChange() }\">F-Change</button>\
                 <button class=\"btn \" id=\"f-load\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.filamentLoad() }\">F-Load</button>\
-            </div>
+            </div>\
         ");
- */       
+       
         // #control-jog-general
         // --------------------
         self.control.light = new ko.observable(30);   
