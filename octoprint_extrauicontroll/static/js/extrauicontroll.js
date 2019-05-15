@@ -13,8 +13,8 @@ $(function() {
             <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">\
         ');
         
-        // #control-jog-extrusion
-        // -------------------- 
+        // <!-- XY jogging control panel -->
+
         self.control.filamentChange = function () {
 			self.control.sendCustomCommand({ command: "M114"});
 		};
@@ -23,53 +23,44 @@ $(function() {
 			self.control.sendCustomCommand({ command: "M114"});
 		};
         
-
-        $("#control-jog-extrusion").find("button").eq(0).attr("id", "tool");
-        $("#control-jog-extrusion").find("button").eq(1).attr("id", "extrude");
-        $("#control-jog-extrusion").find("button").eq(2).attr("id", "retract");
-        $("#control-jog-extrusion").find("button").eq(3).attr("id", "flow");
-        $("#retract").after("\
-            <div class=\"btn-group\">\
-                <button class=\"btn \" id=\"f-change\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.filamentChange() }\">F-Change</button>\
-                <button class=\"btn \" id=\"f-load\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.filamentLoad() }\">F-Load</button>\
-            </div>\
-        ");
-       
-        // #control-jog-general
-        // --------------------
-        self.control.light = new ko.observable(30);   
-        self.control.fanSpeed = new ko.observable(60);      
+        // <!-- XY jogging control panel -->      
+        var html=`
+        <h1>X/Y</h1>
+            <div>
+                <button class="btn box pull-left" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x']) }" disabled=""><span class="button-text">X</span></button>
+                <button class="btn box pull-left" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',1) }" disabled=""><i class="fa fa-arrow-up"></i></button>
+                <button class="btn box pull-left" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['y']) }" disabled=""><span class="button-text">Y</span></button>
+            </div>
+            <div>
+                <button class="btn box pull-left" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',-1) }" disabled=""><i class="fa fa-arrow-left"></i></button>
+                <button class="btn box pull-left" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendCenterCommand() }" disabled=""><i class="fa fa-circle-o"></i></button>
+                <button class="btn box pull-left" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('x',1) }" disabled=""><i class="fa fa-arrow-right"></i></button>
+            </div>
+            <div>
+                <button class="btn box pull-left" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['x','y','z']) }" disabled=""><i class="fa fa-home"></i></button>
+                <button class="btn box pull-left" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('y',-1) }" disabled=""><i class="fa fa-arrow-down"></i></button>
+                <button class="btn box pull-left" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendHomeCommand(['z']) }" disabled=""><span class="button-text">Z</span></button>
+            </div>
+        `;        
+        $("#control-jog-xy").html(html);
         
-		self.control.setLight = function () {
-            self.light = Math.round(self.control.light() * 255 / 100);
-			self.control.sendCustomCommand({ command: "M42 P6 S" + self.speed });
-		};
-        
-        self.control.setFanSpeed = function () {
-            self.speed = Math.round(self.control.fanSpeed() * 255 / 100);
-			self.control.sendCustomCommand({ command: "M106 S" + self.speed });
-		};
-        
-        $("#control-jog-general").find("button").eq(0).attr("id", "motors-off");
-        $("#control-jog-general").find("button").eq(1).attr("id", "fan-on");
-        $("#control-jog-general").find("button").eq(2).attr("id", "fan-off");
-
-        if ($("#touch body").length == 0) {
-            // Remove original fan on/off buttons
-            $("#fan-on").remove();
-            $("#fan-off").remove();
-            // Add Fan Speed controll
-            $("#control-jog-general").find("button").eq(0).before("\
-            <!-- Light controll -->\
-                <input type=\"number\" style=\"width: 95px\" data-bind=\"slider: {min: 00, max: 100, step: 1, value: light, tooltip: 'hide'}\">\
-                <button class=\"btn btn-block control-box\" id=\"light-set\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.setLight() }\">" + gettext("Set light") + ": <span data-bind=\"text: light() + '%'\"></span></button>\
-                </div>\
-            <!-- Fan Speed controll -->\
-                <input type=\"number\" style=\"width: 95px\" data-bind=\"slider: {min: 00, max: 100, step: 1, value: fanSpeed, tooltip: 'hide'}\">\
-                <button class=\"btn btn-block control-box\" id=\"fan-on\" data-bind=\"enable: isOperational() && loginState.isUser(), click: function() { $root.setFanSpeed() }\">" + gettext("Set fan") + ": <span data-bind=\"text: fanSpeed() + '%'\"></span></button>\
-                </div>\
-           ");
-        }
+        // <!-- Z jogging control panel -->
+        var html=`
+        <h1>Z</h1>
+        <div>
+            <button id="control-zinc" class="btn box" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',1) }" disabled=""><i class="fa fa-arrow-up"></i></button>
+            <button id="control-zinc1" class="btn box" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',1) }" disabled=""><i class="fa fa-arrow-up"></i></button>
+        </div>
+        <div>
+            <button id="control-zhome" class="btn box" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendCenterCommand() }" disabled=""><i class="fa fa-circle-o"></i></button>
+            <button id="control-zhome1" class="btn box" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendCenterCommand() }" disabled=""><i class="fa fa-circle-o"></i></button>
+        </div>
+        <div>
+            <button id="control-zdec" class="btn box" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',-1) }" disabled=""><i class="fa fa-arrow-down"></i></button>
+            <button id="control-zdec1" class="btn box" data-bind="enable: isOperational() && !isPrinting() && loginState.isUser(), click: function() { $root.sendJogCommand('z',-1) }" disabled=""><i class="fa fa-arrow-down"></i></button>
+        </div>
+        `;
+        $("#control-jog-z").html(html);
     }
 
     OCTOPRINT_VIEWMODELS.push({
